@@ -1,9 +1,13 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-import psycopg2, os, datetime
+import psycopg2
+import os
+import datetime
+
 
 app = Flask(__name__)
 CORS(app)
+
 
 def get_conn():
     return psycopg2.connect(
@@ -14,7 +18,9 @@ def get_conn():
         password=os.getenv("DB_PASSWORD", "postgres")
     )
 
+
 def init_db():
+
     conn = get_conn()
     cur = conn.cursor()
 
@@ -31,12 +37,15 @@ def init_db():
     cur.close()
     conn.close()
 
+
 @app.route("/health")
 def health():
+
     try:
         conn = get_conn()
         conn.close()
         db_status = "connected"
+
     except Exception as e:
         db_status = f"error: {e}"
 
@@ -45,6 +54,7 @@ def health():
         "db": db_status,
         "time": datetime.datetime.utcnow().isoformat()
     })
+
 
 @app.route("/api/notes", methods=["GET"])
 def get_notes():
@@ -73,6 +83,7 @@ def get_notes():
         for r in rows
     ])
 
+
 @app.route("/api/notes", methods=["POST"])
 def create_note():
 
@@ -97,6 +108,7 @@ def create_note():
         "message": "nota creada"
     }), 201
 
+
 @app.route("/api/notes/<int:note_id>", methods=["DELETE"])
 def delete_note(note_id):
 
@@ -116,6 +128,12 @@ def delete_note(note_id):
         "message": "nota eliminada"
     })
 
+
 if __name__ == "__main__":
+
     init_db()
-    app.run(host="0.0.0.0", port=5000)
+
+    app.run(
+        host="0.0.0.0",
+        port=5000
+    )
