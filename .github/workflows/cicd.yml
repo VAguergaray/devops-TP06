@@ -19,7 +19,7 @@ on:
       - develop
 
 env:
-  DOCKER_IMAGE: $ {{ secrets.valennzarat }} /devops-portfolio
+  DOCKER_IMAGE: valennzarat/devops-portfolio
   PYTHON_VERSION: "3.12"
 
 jobs:
