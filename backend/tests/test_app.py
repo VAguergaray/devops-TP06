@@ -1,11 +1,13 @@
-import pytest
-import json
-import sys
 import os
+import sys
+import json
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+import pytest
 
 from unittest.mock import patch, MagicMock
+
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 @pytest.fixture
@@ -37,25 +39,25 @@ def test_health(client):
 
         mock_conn.return_value
 
-        r = client.get('/health')
+        response = client.get('/health')
 
-        assert r.status_code == 200
+        assert response.status_code == 200
 
 
 def test_get_notes(client):
 
-    r = client.get('/api/notes')
+    response = client.get('/api/notes')
 
-    assert r.status_code == 200
+    assert response.status_code == 200
 
-    data = json.loads(r.data)
+    data = json.loads(response.data)
 
     assert isinstance(data, list)
 
 
 def test_create_note(client):
 
-    r = client.post(
+    response = client.post(
         '/api/notes',
         data=json.dumps({
             'title': 'Test',
@@ -64,11 +66,11 @@ def test_create_note(client):
         content_type='application/json'
     )
 
-    assert r.status_code == 201
+    assert response.status_code == 201
 
 
 def test_delete_note(client):
 
-    r = client.delete('/api/notes/1')
+    response = client.delete('/api/notes/1')
 
-    assert r.status_code == 200
+    assert response.status_code == 200
