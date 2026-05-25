@@ -1,6 +1,6 @@
-# TP06 — Docker Compose App de Notas
+# Docker Compose App de Notas
 
-Trabajo Práctico de DevOps utilizando Docker Compose, Flask, PostgreSQL y Nginx.
+DevOps utilizando Docker Compose, Flask, PostgreSQL y Nginx.
 
 ---
 
