@@ -4,8 +4,8 @@ import psycopg2
 import os
 import datetime
 
-
 app = Flask(__name__)
+
 CORS(app)
 
 
@@ -20,7 +20,6 @@ def get_conn():
 
 
 def init_db():
-
     conn = get_conn()
     cur = conn.cursor()
 
@@ -40,12 +39,10 @@ def init_db():
 
 @app.route("/health")
 def health():
-
     try:
         conn = get_conn()
         conn.close()
         db_status = "connected"
-
     except Exception as e:
         db_status = f"error: {e}"
 
@@ -58,15 +55,13 @@ def health():
 
 @app.route("/api/notes", methods=["GET"])
 def get_notes():
-
     conn = get_conn()
     cur = conn.cursor()
 
-    cur.execute("""
-        SELECT id, title, content, created_at
-        FROM notes
-        ORDER BY created_at DESC
-    """)
+    cur.execute(
+        "SELECT id, title, content, created_at "
+        "FROM notes ORDER BY created_at DESC"
+    )
 
     rows = cur.fetchall()
 
@@ -86,7 +81,6 @@ def get_notes():
 
 @app.route("/api/notes", methods=["POST"])
 def create_note():
-
     data = request.get_json()
 
     conn = get_conn()
@@ -111,7 +105,6 @@ def create_note():
 
 @app.route("/api/notes/<int:note_id>", methods=["DELETE"])
 def delete_note(note_id):
-
     conn = get_conn()
     cur = conn.cursor()
 
@@ -129,11 +122,12 @@ def delete_note(note_id):
     })
 
 
-if __name__ == "__main__":
-
+# Inicializar la base de datos al cargar la aplicación
+try:
     init_db()
+except Exception as e:
+    print(f"No se pudo inicializar la base de datos: {e}")
 
-    app.run(
-        host="0.0.0.0",
-        port=5000
-    )
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
