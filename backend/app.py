@@ -5,51 +5,32 @@ import os
 import datetime
 
 app = Flask(__name__)
-
 CORS(app)
 
 
 def get_conn():
     return psycopg2.connect(
-        host=os.getenv("DB_HOST", "db"),
-        port=os.getenv("DB_PORT", "5432"),
-        dbname=os.getenv("DB_NAME", "notesdb"),
-        user=os.getenv("DB_USER", "postgres"),
-        password=os.getenv("DB_PASSWORD", "postgres")
+        host=os.environ.get("DB_HOST", "localhost"),
+        port=os.environ.get("DB_PORT", "5432"),
+        dbname=os.environ.get("DB_NAME", "notes"),
+        user=os.environ.get("DB_USER", "postgres"),
+        password=os.environ.get("DB_PASSWORD", "postgres"),
     )
 
 
-def init_db():
-    conn = get_conn()
-    cur = conn.cursor()
-
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS notes (
-            id SERIAL PRIMARY KEY,
-            title VARCHAR(200) NOT NULL,
-            content TEXT,
-            created_at TIMESTAMP DEFAULT NOW()
-        )
-    """)
-
-    conn.commit()
-    cur.close()
-    conn.close()
-
-
-@app.route("/health")
+@app.route("/health", methods=["GET"])
 def health():
     try:
         conn = get_conn()
         conn.close()
-        db_status = "connected"
-    except Exception as e:
-        db_status = f"error: {e}"
+        db_status = "ok"
+    except Exception:
+        db_status = "error"
 
     return jsonify({
         "status": "ok",
-        "db": db_status,
-        "time": datetime.datetime.utcnow().isoformat()
+        "database": db_status,
+        "time": datetime.datetime.now(datetime.timezone.utc).isoformat()
     })
 
 
@@ -81,14 +62,18 @@ def get_notes():
 
 @app.route("/api/notes", methods=["POST"])
 def create_note():
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
+    title = (data.get("title") or "").strip()
+
+    if not title:
+        return jsonify({"error": "El título es obligatorio"}), 400
 
     conn = get_conn()
     cur = conn.cursor()
 
     cur.execute(
         "INSERT INTO notes (title, content) VALUES (%s, %s) RETURNING id",
-        (data["title"], data.get("content", ""))
+        (title, data.get("content", ""))
     )
 
     note_id = cur.fetchone()[0]
@@ -108,25 +93,13 @@ def delete_note(note_id):
     conn = get_conn()
     cur = conn.cursor()
 
-    cur.execute(
-        "DELETE FROM notes WHERE id = %s",
-        (note_id,)
-    )
+    cur.execute("DELETE FROM notes WHERE id = %s", (note_id,))
 
     conn.commit()
     cur.close()
     conn.close()
 
-    return jsonify({
-        "message": "nota eliminada"
-    })
-
-
-# Inicializar la base de datos al cargar la aplicación
-try:
-    init_db()
-except Exception as e:
-    print(f"No se pudo inicializar la base de datos: {e}")
+    return jsonify({"message": "nota eliminada"}), 200
 
 
 if __name__ == "__main__":
