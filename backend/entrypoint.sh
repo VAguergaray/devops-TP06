@@ -1,28 +1,25 @@
-#!/bin/sh
+#!/bin/bash
+
+set -e
 
 echo "Esperando a Postgres..."
 
-until python3 -c "
-import psycopg2, os, sys
-try:
-    psycopg2.connect(
-        host=os.getenv('DB_HOST','db'),
-        port=os.getenv('DB_PORT','5432'),
-        dbname=os.getenv('DB_NAME','notesdb'),
-        user=os.getenv('DB_USER','postgres'),
-        password=os.getenv('DB_PASSWORD','postgres')
-    )
-    sys.exit(0)
-except Exception:
-    sys.exit(1)
-"
+until python3 -c 'import psycopg2, os; psycopg2.connect(
+    host=os.getenv("DB_HOST", "db"),
+    port=os.getenv("DB_PORT", "5432"),
+    dbname=os.getenv("DB_NAME", "notesdb"),
+    user=os.getenv("DB_USER", "postgres"),
+    password=os.getenv("DB_PASSWORD", "postgres")
+).close()' 2>/dev/null
 do
-    echo 'Postgres no disponible...'
+    echo "Postgres no disponible, reintentando en 2s..."
     sleep 2
 done
 
-echo 'Postgres iniciado correctamente'
+echo "Postgres listo."
 
+echo "Inicializando base de datos..."
 python3 -c "import app; app.init_db()"
 
+echo "Iniciando aplicación..."
 exec "$@"

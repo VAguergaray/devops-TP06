@@ -47,3 +47,42 @@ devops-TP06/
 │   └── index.html
 └── scripts/
     └── healthcheck.sh
+
+# TP07: CI/CD con GitHub Actions
+
+![CI/CD Pipeline](https://github.com/VAguergaray/devops-TP06/actions/workflows/cicd.yml/badge.svg)
+
+App de notas con pipeline CI/CD completo usando GitHub Actions.
+
+## Pipeline
+
+| Stage | Trigger | Que hace |
+|---|---|---|
+| lint | push (main, develop, feature/**) y PR | flake8 en Python, yamllint en YAML |
+| test | despues de lint | pytest con reporte de cobertura |
+| build-push | push a main y develop | docker buildx, push a Docker Hub |
+| deploy | solo push a main | SSH al servidor, compose pull + up |
+
+## 5 Secrets requeridos
+
+- DOCKERHUB_USERNAME
+- DOCKERHUB_TOKEN
+- DEPLOY_HOST
+- DEPLOY_USER
+- DEPLOY_SSH_KEY
+
+## Correr tests localmente
+
+```bash
+cd backend
+pip install -r requirements.txt
+pytest tests/ -v --cov=. --cov-report=term-missing
+```
+
+## Flujo por rama
+
+```text
+feature/* -> lint -> test
+develop   -> lint -> test -> build -> push
+main      -> lint -> test -> build -> push -> deploy
+```
